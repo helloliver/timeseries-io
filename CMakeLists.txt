@@ -49,6 +49,7 @@ install(TARGETS timeseries-io
     RUNTIME DESTINATION bin
 )
 
+# 安装头文件到 include/timeseries-io/ 目录
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
     DESTINATION include/timeseries-io
     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
@@ -57,11 +58,18 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
 # 生成和安装包配置文件
 install(EXPORT timeseries-io-targets
     FILE timeseries-io-targets.cmake
-    NAMESPACE timeseries-io::
+    # NAMESPACE timeseries-io:: # 移除命名空间
     DESTINATION share/cmake/timeseries-io
 )
 
 include(CMakePackageConfigHelpers)
+
+# 创建配置文件的输入文件（如果不存在）
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/cmake/timeseries-io-config.cmake.in)
+    file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/timeseries-io-config.cmake.in
+        "@PACKAGE_INIT@\n\ninclude(\"\${CMAKE_CURRENT_LIST_DIR}/timeseries-io-targets.cmake\")\n\ncheck_required_components(timeseries-io)\n"
+    )
+endif()
 
 configure_package_config_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/timeseries-io-config.cmake.in
