@@ -22,6 +22,8 @@ class TimeSeriesReader {
     std::string binPath_;
     std::ifstream binFile_;
 
+    bool valid_ = true;
+
     // Streaming read buffer
     std::vector<uint8_t> buffer_;
     size_t chunkSize_;
@@ -45,6 +47,8 @@ class TimeSeriesReader {
                      size_t chunkSize = 100000);
 
     ~TimeSeriesReader();
+
+    bool valid(void) { return valid_; }
 
     // Get the next data
     bool next(void);

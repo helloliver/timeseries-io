@@ -1,9 +1,10 @@
 #include <stdexcept>
-#include "TimeSeriesWriter.h"
 
 #if defined(__cplusplus) && (__cplusplus >= 201703L)
 #include <filesystem>
 #endif
+
+#include "TimeSeriesWriter.h"
 
 void ensureDirectoryExists(const std::string& filePath) {
 #if defined(__cplusplus) && (__cplusplus >= 201703L)

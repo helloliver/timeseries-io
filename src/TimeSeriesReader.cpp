@@ -2,6 +2,7 @@
 #include <ctime>
 #include <limits>
 #include <stdexcept>
+#include <iostream>
 #include "TimeSeriesReader.h"
 
 static bool checkFile(const std::string& path) {
@@ -39,23 +40,37 @@ TimeSeriesReader::TimeSeriesReader(const std::string& csvPath,
                                    std::unique_ptr<TimeSeriesType> data,
                                    size_t chunkSize)
     : csvPath_(csvPath), binPath_(binPath), data_(std::move(data)), chunkSize_(chunkSize) {
-    if (!data_) throw std::runtime_error("TimeSeriesReader: data is null");
+    if (!data_) {
+        valid_ = false;
+        std::cout << "[TimeSeriesReader] std::unique_ptr<TimeSeriesType> data is null" << std::endl;
+        return;
+    }
 
     bool needConvert = checkFile(csvPath_) && (!checkFile(binPath_) || getModTime(csvPath_) > getModTime(binPath_));
     if (needConvert) convertCSVToBinary(csvPath_, binPath_, *data_, chunkSize_);
 
     binFile_.open(binPath_, std::ios::binary);
-    if (!binFile_) throw std::runtime_error("Failed to open binary file");
+    if (!binFile_) {
+        valid_ = false;
+        std::cout << "[TimeSeriesReader] Failed to open binary file :" << binPath_ << std::endl;
+        return;
+    }
 
     uint32_t len = 0;
     binFile_.read(reinterpret_cast<char*>(&len), sizeof(len));
-    if (len != data_->head_array_length())
-        throw std::runtime_error("Binary header length mismatch");
+    if (len != data_->head_array_length()) {
+        valid_ = false;
+        std::cout << "[TimeSeriesReader] Binary header length mismatch" << std::endl;
+        return;
+    }
 
     std::vector<uint8_t> head(len);
     binFile_.read(reinterpret_cast<char*>(head.data()), len);
-    if (memcmp(head.data(), data_->head_array().data(), len) != 0)
-        throw std::runtime_error("Binary header content mismatch");
+    if (memcmp(head.data(), data_->head_array().data(), len) != 0) {
+        valid_ = false;
+        std::cout << "[TimeSeriesReader] Binary header content mismatch" << std::endl;
+        return;
+    }
 
     binFile_.seekg(0, std::ios::end);
     size_t totalBytes = static_cast<size_t>(binFile_.tellg()) - sizeof(uint32_t) - len;
@@ -83,6 +98,7 @@ void TimeSeriesReader::load(void) {
 }
 
 bool TimeSeriesReader::next(void) {
+    if (!valid_) return false;
     if (position_ >= length_) return false;
     else if (bufferIndex_ >= buffer_.size() / data_->size()) load();
 
@@ -105,6 +121,7 @@ void TimeSeriesReader::rewind(void) {
 }
 
 std::unique_ptr<TimeSeriesType> TimeSeriesReader::first(void) {
+    if (!valid_) return nullptr;
     if (length_ == 0) return nullptr;
 
     std::ifstream file(binPath_, std::ios::binary);
@@ -123,6 +140,7 @@ std::unique_ptr<TimeSeriesType> TimeSeriesReader::first(void) {
 }
 
 std::unique_ptr<TimeSeriesType> TimeSeriesReader::last(void) {
+    if (!valid_) return nullptr;
     if (length_ == 0) return nullptr;
 
     std::ifstream file(binPath_, std::ios::binary);
