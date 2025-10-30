@@ -1,6 +1,6 @@
 #pragma once
 
-#include <fstream>
+#include <cstdio>
 #include <vector>
 #include <string>
 #include <memory>
@@ -10,7 +10,7 @@
 class TimeSeriesWriter {
 private:
     std::string binPath_;
-    std::ofstream binFile_;
+    FILE* binFile_;
     std::unique_ptr<TimeSeriesType> data_;
 
     size_t chunkSize_;
