@@ -2,6 +2,6 @@
 
 #include "./TimeSeriesType.h"
 #include "./TimeSeriesWriter.h"
-#include "./AsyncTimeSeriesWriter.h"
+#include "./TimeSeriesAsyncWriter.h"
 #include "./TimeSeriesReader.h"
 #include "./TimeSeriesMultiReader.h"
