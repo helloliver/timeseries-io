@@ -17,8 +17,9 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # 查找源文件
 file(GLOB TIMESERIES_IO_SOURCES
-    "${PROJECT_SOURCE_DIR}/src/TimeSeriesReader.cpp"
     "${PROJECT_SOURCE_DIR}/src/TimeSeriesWriter.cpp"
+    "${PROJECT_SOURCE_DIR}/src/TimeSeriesAsyncWriter.cpp"
+    "${PROJECT_SOURCE_DIR}/src/TimeSeriesReader.cpp"
     "${PROJECT_SOURCE_DIR}/src/TimeSeriesMultiReader.cpp"
 )
 
