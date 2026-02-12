@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include <cstring>
+#include <utility>
 
 #include "TimeSeriesType.h"
 #include "TimeSeriesWriter.h"
@@ -36,15 +37,20 @@ class TimeSeriesReader {
 
     double timestamp_ = -std::numeric_limits<double>::max();
 
+    // Time ranges to skip
+    std::vector<std::pair<double, double>> skipRanges_;
+
    public:
     TimeSeriesReader(const std::string& csvPath,
                      const std::string& binPath,
                      std::unique_ptr<TimeSeriesType> data,
-                     size_t chunkSize = 100000);
+                     size_t chunkSize = 10000,
+                     const std::vector<double>& block_time_list = {});
 
     TimeSeriesReader(const std::string& csvPath,
                      std::unique_ptr<TimeSeriesType> data,
-                     size_t chunkSize = 100000);
+                     size_t chunkSize = 10000,
+                     const std::vector<double>& block_time_list = {});
 
     ~TimeSeriesReader();
 
@@ -71,4 +77,10 @@ class TimeSeriesReader {
    private:
     // Load the next chunk of data into the buffer
     void load(void);
+
+    // Initialize skip ranges from vector
+    void initSkipRanges(const std::vector<double>& block_time_list);
+
+    // Check if current timestamp should be skipped
+    bool shouldSkip(double timestamp) const;
 };

@@ -36,11 +36,13 @@ class TimeSeriesMultiReader {
              const std::string& bin_path,
              std::unique_ptr<TimeSeriesType> descriptor,
              size_t chunk_size = 100000,
+             const std::vector<double>& block_time_list = {},
              double delay = 0);
 
     void add(const std::string& csv_path,
              std::unique_ptr<TimeSeriesType> descriptor,
              size_t chunk_size = 100000,
+             const std::vector<double>& block_time_list = {},
              double delay = 0);
 
     void add(std::unique_ptr<TimeSeriesReader> r, double delay = 0);

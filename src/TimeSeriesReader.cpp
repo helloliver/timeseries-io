@@ -38,7 +38,8 @@ static void convertCSVToBinary(const std::string& csvPath, const std::string& bi
 TimeSeriesReader::TimeSeriesReader(const std::string& csvPath,
                                    const std::string& binPath,
                                    std::unique_ptr<TimeSeriesType> data,
-                                   size_t chunkSize)
+                                   size_t chunkSize,
+                                   const std::vector<double>& block_time_list)
     : csvPath_(csvPath), binPath_(binPath), data_(std::move(data)), chunkSize_(chunkSize) {
     if (!data_) {
         valid_ = false;
@@ -79,15 +80,46 @@ TimeSeriesReader::TimeSeriesReader(const std::string& csvPath,
 
     buffer_.resize(chunkSize_ * data_->size());
     load();
+
+    initSkipRanges(block_time_list);
 }
 
 TimeSeriesReader::TimeSeriesReader(const std::string& csvPath,
                                    std::unique_ptr<TimeSeriesType> data,
-                                   size_t chunkSize)
-    : TimeSeriesReader(csvPath, convertBinaryPath(csvPath), std::move(data), chunkSize) {}
+                                   size_t chunkSize,
+                                   const std::vector<double>& block_time_list)
+    : TimeSeriesReader(csvPath, convertBinaryPath(csvPath), std::move(data), chunkSize, block_time_list) {
+}
 
 TimeSeriesReader::~TimeSeriesReader() {
     if (binFile_.is_open()) binFile_.close();
+}
+
+void TimeSeriesReader::initSkipRanges(const std::vector<double>& block_time_list) {
+    if (block_time_list.size() % 2 != 0) {
+        std::cout << "[TimeSeriesReader] Warning: block_time_list size is not even, ignoring skip ranges" << std::endl;
+        return;
+    }
+
+    for (size_t i = 0; i < block_time_list.size(); i += 2) {
+        double start = block_time_list[i];
+        double end = block_time_list[i + 1];
+        if (start < end) {
+            skipRanges_.emplace_back(start, end);
+        } else {
+            std::cout << "[TimeSeriesReader] Warning: invalid skip range [" 
+                      << start << ", " << end << "], start >= end" << std::endl;
+        }
+    }
+}
+
+bool TimeSeriesReader::shouldSkip(double timestamp) const {
+    for (const auto& range : skipRanges_) {
+        if (timestamp >= range.first && timestamp <= range.second) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void TimeSeriesReader::load(void) {
@@ -100,16 +132,27 @@ void TimeSeriesReader::load(void) {
 bool TimeSeriesReader::next(void) {
     if (!valid_) return false;
     if (position_ >= length_) return false;
-    else if (bufferIndex_ >= buffer_.size() / data_->size()) load();
 
-    bool res = data_->deserialize(buffer_.data() + bufferIndex_ * data_->size());
-    bufferIndex_++;
-    position_++;
+    while (true) {
+        if (position_ >= length_) return false;
 
-    // if (timestamp_ > data_->get_timestamp()) throw std::runtime_error("Invalid timestamp");
-    timestamp_ = data_->get_timestamp();
+        if (bufferIndex_ >= buffer_.size() / data_->size()) {
+            load();
+        }
 
-    return res;
+        bool res = data_->deserialize(buffer_.data() + bufferIndex_ * data_->size());
+        bufferIndex_++;
+        position_++;
+
+        timestamp_ = data_->get_timestamp();
+
+        // Skip if timestamp is in any skip range
+        if (skipRanges_.empty() || !shouldSkip(timestamp_)) {
+            return res;
+        }
+
+        // Otherwise continue to next data point
+    }
 }
 
 void TimeSeriesReader::rewind(void) {

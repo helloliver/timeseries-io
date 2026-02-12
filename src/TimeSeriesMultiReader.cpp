@@ -32,9 +32,10 @@ void TimeSeriesMultiReader::add(const std::string& csv_path,
                                 const std::string& bin_path,
                                 std::unique_ptr<TimeSeriesType> descriptor,
                                 size_t chunk_size,
+                                const std::vector<double>& block_time_list,
                                 double delay) {
     if (sources_lock_) throw std::runtime_error("TimeSeriesMultiReader: sources have been locked");
-    auto r = std::make_unique<TimeSeriesReader>(csv_path, bin_path, std::move(descriptor), chunk_size);
+    auto r = std::make_unique<TimeSeriesReader>(csv_path, bin_path, std::move(descriptor), chunk_size, block_time_list);
     sources_.emplace_back(std::make_unique<Source>(std::move(r), delay));
     min_idx_ = sources_.size();
 }
@@ -42,9 +43,10 @@ void TimeSeriesMultiReader::add(const std::string& csv_path,
 void TimeSeriesMultiReader::add(const std::string& csv_path,
                                 std::unique_ptr<TimeSeriesType> descriptor,
                                 size_t chunk_size,
+                                const std::vector<double>& block_time_list,
                                 double delay) {
     if (sources_lock_) throw std::runtime_error("TimeSeriesMultiReader: sources have been locked");
-    auto r = std::make_unique<TimeSeriesReader>(csv_path, std::move(descriptor), chunk_size);
+    auto r = std::make_unique<TimeSeriesReader>(csv_path, std::move(descriptor), chunk_size, block_time_list);
     sources_.emplace_back(std::make_unique<Source>(std::move(r), delay));
     min_idx_ = sources_.size();
 }
