@@ -43,6 +43,7 @@ TimeSeriesWriter::~TimeSeriesWriter() {
 void TimeSeriesWriter::save(const TimeSeriesType& data) {
     std::vector<uint8_t> buf = data.serialize();
     save(buf.data());
+    set_timestamp(data.get_timestamp());
 }
 
 void TimeSeriesWriter::save(const void* buffer) {
@@ -56,6 +57,15 @@ void TimeSeriesWriter::save(const double& timestamp, const void* buffer) {
     memcpy(buffer_.data() + bufferIndex_ * data_->size() + sizeof(timestamp), buffer, data_->size() - sizeof(timestamp));
     bufferIndex_++;
     if (bufferIndex_ >= chunkSize_) flush();
+    set_timestamp(timestamp);
+}
+
+void TimeSeriesWriter::set_timestamp(double timestamp) {
+    timestamp_ = timestamp;
+}
+
+double TimeSeriesWriter::get_timestamp(void) {
+    return timestamp_;
 }
 
 void TimeSeriesWriter::flush(void) {

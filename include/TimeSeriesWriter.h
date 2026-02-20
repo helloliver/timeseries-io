@@ -12,6 +12,7 @@ private:
     std::string binPath_;
     std::ofstream binFile_;
     std::unique_ptr<TimeSeriesType> data_;
+    double timestamp_ = NAN;
 
     size_t chunkSize_;
     std::vector<uint8_t> buffer_;
@@ -26,6 +27,9 @@ public:
     void save(const TimeSeriesType& data);
     void save(const void* data);
     void save(const double& timestamp, const void* ptr);
+
+    void set_timestamp(double timestamp);
+    double get_timestamp(void);
 
     void flush(void);
 };

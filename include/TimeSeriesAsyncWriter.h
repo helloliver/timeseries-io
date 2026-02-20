@@ -24,6 +24,9 @@ public:
     void save(const void* buffer);
     void save(double timestamp, const void* buffer);
 
+    void set_timestamp(double timestamp);
+    double get_timestamp(void);
+
 private:
     void writerThreadLoop();
     void enqueue(const uint8_t* data, size_t size);
@@ -32,6 +35,7 @@ private:
     std::ofstream binFile_;
     std::string binPath_;
     std::unique_ptr<TimeSeriesType> data_;
+    double timestamp_ = NAN;
 
     size_t dataSize_;
     size_t chunkSize_;

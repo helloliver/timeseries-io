@@ -72,6 +72,7 @@ void TimeSeriesAsyncWriter::enqueue(const uint8_t* data, size_t size) {
 void TimeSeriesAsyncWriter::save(const TimeSeriesType& data) {
     auto buf = data.serialize();
     enqueue(buf.data(), buf.size());
+    set_timestamp(data.get_timestamp());
 }
 
 void TimeSeriesAsyncWriter::save(const void* buffer) {
@@ -83,6 +84,15 @@ void TimeSeriesAsyncWriter::save(double timestamp, const void* buffer) {
     memcpy(tmp.data(), &timestamp, sizeof(timestamp));
     memcpy(tmp.data() + sizeof(timestamp), buffer, dataSize_ - sizeof(timestamp));
     enqueue(tmp.data(), tmp.size());
+    set_timestamp(timestamp);
+}
+
+void TimeSeriesAsyncWriter::set_timestamp(double timestamp) {
+    timestamp_ = timestamp;
+}
+
+double TimeSeriesAsyncWriter::get_timestamp(void) {
+    return timestamp_;
 }
 
 void TimeSeriesAsyncWriter::writerThreadLoop() {
