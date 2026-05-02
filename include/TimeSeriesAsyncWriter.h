@@ -9,6 +9,7 @@
 #include <atomic>
 #include <fstream>
 #include <memory>
+#include <cmath>
 
 #include "TimeSeriesType.h"
 
