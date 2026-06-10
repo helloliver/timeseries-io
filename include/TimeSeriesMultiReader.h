@@ -47,6 +47,8 @@ class TimeSeriesMultiReader {
 
     void add(std::unique_ptr<TimeSeriesReader> r, double delay = 0);
 
+    bool valid(void);
+
     std::unique_ptr<TimeSeriesType> next(double& timestamp);
 
     std::unique_ptr<TimeSeriesType> next(void);
